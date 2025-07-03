@@ -17,7 +17,6 @@ use Spatie\Backup\Tasks\Monitor\BackupDestinationStatus;
 use Spatie\Backup\Tasks\Monitor\BackupDestinationStatusFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Spatie\Backup\Config\MonitoredBackupsConfig;
-
 class App extends Component
 {
     public $backupStatuses = [];
@@ -31,40 +30,40 @@ class App extends Component
     public $deletingFile = null;
 
     public function updateBackupStatuses()
-    {
-        $this->backupStatuses = Cache::remember('backup-statuses', now()->addSeconds(4), function () {
-            $monitorConfig = new MonitoredBackupsConfig(config('backup.monitor_backups'));
+{
+    $this->backupStatuses = Cache::remember('backup-statuses', now()->addSeconds(4), function () {
+        $monitorConfig = new MonitoredBackupsConfig(config('backup.monitor_backups'));
 
-            return BackupDestinationStatusFactory::createForMonitorConfig($monitorConfig)
-                ->map(function (BackupDestinationStatus $backupDestinationStatus) {
-                    return [
-                        'name' => $backupDestinationStatus->backupDestination()->backupName(),
-                        'disk' => $backupDestinationStatus->backupDestination()->diskName(),
-                        'reachable' => $backupDestinationStatus->backupDestination()->isReachable(),
-                        'healthy' => $backupDestinationStatus->isHealthy(),
-                        'amount' => $backupDestinationStatus->backupDestination()->backups()->count(),
-                        'newest' => $backupDestinationStatus->backupDestination()->newestBackup()
-                            ? $backupDestinationStatus->backupDestination()->newestBackup()->date()->diffForHumans()
-                            : 'No backups present',
-                        'usedStorage' => Format::humanReadableSize($backupDestinationStatus->backupDestination()->usedStorage()),
-                    ];
-                })
-                ->values()
-                ->toArray();
-        });
-
-        if (! $this->activeDisk && count($this->backupStatuses)) {
-            $this->activeDisk = $this->backupStatuses[0]['disk'];
-        }
-
-        $this->disks = collect($this->backupStatuses)
-            ->pluck('disk')
-            ->unique()
+        return BackupDestinationStatusFactory::createForMonitorConfig($monitorConfig)
+            ->map(function (BackupDestinationStatus $backupDestinationStatus) {
+                return [
+                    'name' => $backupDestinationStatus->backupDestination()->backupName(),
+                    'disk' => $backupDestinationStatus->backupDestination()->diskName(),
+                    'reachable' => $backupDestinationStatus->backupDestination()->isReachable(),
+                    'healthy' => $backupDestinationStatus->isHealthy(),
+                    'amount' => $backupDestinationStatus->backupDestination()->backups()->count(),
+                    'newest' => $backupDestinationStatus->backupDestination()->newestBackup()
+                        ? $backupDestinationStatus->backupDestination()->newestBackup()->date()->diffForHumans()
+                        : 'No backups present',
+                    'usedStorage' => Format::humanReadableSize($backupDestinationStatus->backupDestination()->usedStorage()),
+                ];
+            })
             ->values()
-            ->all();
+            ->toArray();
+    });
 
-        $this->emitSelf('backupStatusesUpdated');
+    if (! $this->activeDisk && count($this->backupStatuses)) {
+        $this->activeDisk = $this->backupStatuses[0]['disk'];
     }
+
+    $this->disks = collect($this->backupStatuses)
+        ->pluck('disk')
+        ->unique()
+        ->values()
+        ->all();
+
+    $this->emitSelf('backupStatusesUpdated');
+}
 
     public function getFiles(string $disk = '')
     {
@@ -80,7 +79,7 @@ class App extends Component
             return $backupDestination
                 ->backups()
                 ->map(function (Backup $backup) {
-                    $size = method_exists($backup, 'sizeInBytes') ? $backup->sizeInBytes() : $backup->size();
+                    $size = method_exists($backup, 'sizeInBytes') ? $backup->sizeInBytes() : 0;
 
                     return [
                         'path' => $backup->path(),
