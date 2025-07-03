@@ -1,7 +1,7 @@
 {
-    "name": "pavel-mironchik/laravel-backup-panel",
+    "name": "kinggcode/laravel-backup-panel",
     "description": "An interface for Spatie Laravel Backup package",
-    "homepage": "https://github.com/pavel-mironchik/laravel-backup-panel",
+    "homepage": "https://github.com/KinggCode/laravel-backup-panel",
     "keywords": [
         "backup",
         "database",
@@ -11,8 +11,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Pavel Mironchik",
-            "email": "mironchikpavel@gmail.com"
+            "name": "KinggCode",
+            "email": "kinggcode@gmail.com"
         }
     ],
     "require": {
