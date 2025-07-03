@@ -16,6 +16,7 @@ use Spatie\Backup\Helpers\Format;
 use Spatie\Backup\Tasks\Monitor\BackupDestinationStatus;
 use Spatie\Backup\Tasks\Monitor\BackupDestinationStatusFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Spatie\Backup\Config\MonitoredBackupsConfig;
 
 class App extends Component
 {
@@ -32,7 +33,9 @@ class App extends Component
     public function updateBackupStatuses()
     {
         $this->backupStatuses = Cache::remember('backup-statuses', now()->addSeconds(4), function () {
-            return BackupDestinationStatusFactory::createForMonitorConfig(config('backup.monitor_backups'))
+            $monitorConfig = new MonitoredBackupsConfig(config('backup.monitor_backups'));
+
+            return BackupDestinationStatusFactory::createForMonitorConfig($monitorConfig)
                 ->map(function (BackupDestinationStatus $backupDestinationStatus) {
                     return [
                         'name' => $backupDestinationStatus->backupDestination()->backupName(),
@@ -50,14 +53,13 @@ class App extends Component
                 ->toArray();
         });
 
-        if (! $this->activeDisk and count($this->backupStatuses)) {
+        if (! $this->activeDisk && count($this->backupStatuses)) {
             $this->activeDisk = $this->backupStatuses[0]['disk'];
         }
 
         $this->disks = collect($this->backupStatuses)
-            ->map(function ($backupStatus) {
-                return $backupStatus['disk'];
-            })
+            ->pluck('disk')
+            ->unique()
             ->values()
             ->all();
 
